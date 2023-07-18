@@ -1173,4 +1173,8 @@ public class TestModel extends TestUtils {
                 {0, 0, 0, 2}
         }, totalScore, 0, prevBoard, currMove);
     }
+
+    /*public static void main(String[] args) {
+        testMultipleMoves1();    
+    }*/
 }

@@ -106,13 +106,62 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+    /**
+     * 返回值表明该函数是否对该列作出了任何改变
+     */
+    public boolean handleOneColTiltUp(int col) {
+        if (col < 0 || col >= board.size()) {
+            return false;
+        }
+        boolean colChanged = false;
+
+        boolean[] canBeMerged = new boolean[board.size()]; 
+        for (int i = 0; i < canBeMerged.length; i++) {
+            canBeMerged[i] = true;
+        }
+
+        for (int i = board.size() - 2; i >= 0; i--) {
+
+            Tile this_tile = board.tile(col, i);
+            if (this_tile == null) {
+                continue;
+            }
+
+            int new_base = i;
+
+            //Find the new_base(new row of the tile)
+            while (new_base + 1 < board.size() &&
+            (board.tile(col, new_base + 1) == null || 
+             (board.tile(col, new_base + 1) != null && 
+             board.tile(col, new_base + 1).value() == this_tile.value() 
+             && canBeMerged[new_base + 1])
+            )) {
+                ++new_base;
+            }
+
+            colChanged = colChanged || (new_base == i ? false : true);
+            if (new_base != i) {
+                if(board.move(col, new_base, this_tile)) {
+                    score += board.tile(col, new_base).value();
+                    canBeMerged[new_base] = false;
+                }        
+            }
+        }
+        return colChanged;
+    }
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
-        // TODO: Modify this.board (and perhaps this.score) to account
-        // for the tilt to the Side SIDE. If the board changed, set the
-        // changed local variable to true.
+        board.setViewingPerspective(side);
+        for (int j = 0; j < board.size(); j++) {
+            //错误写法：changed = changed || handleOneColTiltUp(j)；
+            //这是因为在上式中，如果changed == true，此时就不会执行后面的函数了...
+            boolean thecol_changed = handleOneColTiltUp(j);
+            changed = changed || thecol_changed;
+        }
+        
+        board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
@@ -137,7 +186,13 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                } 
+            }
+        }
         return false;
     }
 
@@ -147,8 +202,47 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i, j) != null && b.tile(i, j).value() == MAX_PIECE) {
+                    return true;
+                } 
+            }
+        }
         return false;
+    }
+
+
+    /*
+     * HelperFunctions : test if there is adjacent tile with 
+     * the same value of this->tile
+     */
+    private static boolean inRangeOf(Board b, int col, int row) {
+        if (col >= 0 && col < b.size() && row >= 0 && row < b.size()) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean adjSameValTiles(Board b, int col, int row) {
+        Tile this_tile = b.tile(col, row);
+        if (inRangeOf(b, col - 1, row) && 
+            this_tile.value() == b.tile(col - 1, row).value()) {
+                return true;
+            }
+        if (inRangeOf(b, col + 1, row) && 
+            this_tile.value() == b.tile(col + 1, row).value()) {
+                return true;
+            }   
+        if (inRangeOf(b, col, row - 1) && 
+            this_tile.value() == b.tile(col, row - 1).value()) {
+                return true;
+            }     
+        if (inRangeOf(b, col, row + 1) && 
+            this_tile.value() == b.tile(col, row + 1).value()) {
+                return true;
+            }    
+        return false;     
     }
 
     /**
@@ -158,7 +252,16 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if(adjSameValTiles(b, i, j)) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 

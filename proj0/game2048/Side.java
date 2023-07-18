@@ -31,6 +31,7 @@ public enum Side {
      *  by DROW and the colunn by DCOL.  (COL0, ROW0) are the row and
      *  column of the lower-left square when sitting at the board facing
      *  towards this Side. */
+    /*COL0 ROW0指的是某个方向在最上面的时候，左下角的坐标是什么，即你面对一个方向时，它的左下角 */
     Side(int col0, int row0, int dcol, int drow) {
         this.row0 = row0;
         this.col0 = col0;
@@ -53,6 +54,7 @@ public enum Side {
 
     /** Return the standard column number for square (C, R) on a board
      *  of size SIZE oriented with this Side on top. */
+    /*将非标准坐标转化为标准(NORTH)在上面的坐标 */
     public int col(int c, int r, int size) {
         return col0 * (size - 1) + c * drow + r * dcol;
     }

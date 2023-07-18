@@ -62,6 +62,8 @@ public class Board implements Iterable<Tile> {
         return values[side.col(col, row, size())][side.row(col, row, size())];
     }
 
+    //(COL, ROW)属于非标准坐标，是一个视觉坐标。
+    //返回的砖块一定是标准坐标下的
     /** Return the current Tile at (COL, ROW), where 0 <= ROW < size(),
      *  0 <= COL < size(). Returns null if there is no tile there. */
     public Tile tile(int col, int row) {
@@ -84,6 +86,7 @@ public class Board implements Iterable<Tile> {
      * treated as coordinates with respect to the current viewPerspective.
      *
      * Returns whether or not this move is a merge.
+     * 注意此函数没有提供能否合并的情况
      * */
     public boolean move(int col, int row, Tile tile) {
         int pcol = viewPerspective.col(col, row, size()),

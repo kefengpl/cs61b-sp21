@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TestModel",
+            "request": "launch",
+            "mainClass": "game2048.TestModel",
+            "projectName": "proj0_75d03ffe"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "game2048.Main",
+            "projectName": "proj0_75d03ffe"
+        },
+        {
+            "type": "java",
             "name": "________test",
             "request": "launch",
             "mainClass": "game2048.________test",
