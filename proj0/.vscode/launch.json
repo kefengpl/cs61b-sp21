@@ -1,0 +1,63 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "________test",
+            "request": "launch",
+            "mainClass": "game2048.________test",
+            "projectName": "proj0_75d03ffe"
+        },
+        {
+            "type": "java",
+            "name": "Sort",
+            "request": "launch",
+            "mainClass": "src.Sort",
+            "projectName": "javaproject_c8279827"
+        },
+        {
+            "type": "java",
+            "name": "TestSort",
+            "request": "launch",
+            "mainClass": "src.TestSort",
+            "projectName": "javaproject_c8279827"
+        },
+        {
+            "type": "java",
+            "name": "test",
+            "request": "launch",
+            "mainClass": "src.test",
+            "projectName": "javaproject_c8279827"
+        },
+        {
+            "type": "java",
+            "name": "TestSort",
+            "request": "launch",
+            "mainClass": "TestSort",
+            "projectName": "javaproject_c8279827"
+        },
+        {
+            "type": "java",
+            "name": "test",
+            "request": "launch",
+            "mainClass": "test",
+            "projectName": "javaproject_c8279827"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "helloworld",
+            "request": "launch",
+            "mainClass": "helloworld",
+            "projectName": "javaproject_c8279827"
+        }
+    ]
+}
