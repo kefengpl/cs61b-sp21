@@ -1,7 +1,5 @@
 package timingtest;
 import edu.princeton.cs.algs4.Stopwatch;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by hug.
