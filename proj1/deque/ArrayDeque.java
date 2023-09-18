@@ -88,7 +88,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * 向队首添加一个元素
      * */
     public void addFirst(T item) {
-        if (++size > elemArray.length) {
+        ++size;
+        if (size > elemArray.length) {
             handleFullArray();
         } // if 结束后再插入新的元素，size已经在开头增加了，因此无需再处理
         moveCycle(Direction.LEFT, DequeLocation.FRONT);
@@ -99,7 +100,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * 向队列尾部添加一个元素
      * */
     public void addLast(T item) {
-        if (++size > elemArray.length) {
+        ++size;
+        if (size > elemArray.length) {
             handleFullArray();
         }
         elemArray[tail] = item;
@@ -139,9 +141,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
                 newArray[i] = elemArray[front];
             }
         }
-        // 表示removeLast
+        // 表示removeLast BUG: 由于removeLast已经执行了--size，所以这里写成i < size - 1会删去两个元素
         if (l == DequeLocation.TAIL) {
-            for (int i = 0; i < size - 1; ++i) {
+            for (int i = 0; i < size; ++i) {
                 newArray[i] = elemArray[front];
                 moveCycle(Direction.RIGHT, DequeLocation.FRONT);
             }
