@@ -21,8 +21,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     private int tail; // 表示双端队列的队尾的待填充区域，需要向左侧移动1位才能获得队尾元素
     private int size = 0;
 
-    public enum Direction {LEFT, RIGHT}
-    public enum DequeLocation {FRONT, TAIL}
+    private enum Direction { LEFT, RIGHT }
+    private enum DequeLocation { FRONT, TAIL }
 
     public ArrayDeque() {
         elemArray = (T[]) new Object[INIT_SIZE];
@@ -32,7 +32,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     /**
      * 将有限的数组大小看成一个“环”，将front或者tail向右侧、左侧移动1位
      * */
-    public void moveCycle(Direction d, DequeLocation l) {
+    private void moveCycle(Direction d, DequeLocation l) {
         if (d == Direction.LEFT && l == DequeLocation.FRONT) {
             front = (front + elemArray.length - 1) % elemArray.length;
         }
@@ -50,7 +50,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * 函数本身不会对变量进行任何修改
      * @return 返回如果进行moveCycle得到的结果
      * */
-    public int getMoveCycle(Direction d, DequeLocation l) {
+    private int getMoveCycle(Direction d, DequeLocation l) {
         if (d == Direction.LEFT && l == DequeLocation.FRONT) {
             return (front + elemArray.length - 1) % elemArray.length;
         }
@@ -71,7 +71,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * 如果数组满了，需要给数组扩容，并将front置于0，tail置于合适位置
      * */
     private void handleFullArray() {
-        T[] newArray = (T[]) new Object[(int)(EXPAND_RATE * elemArray.length)];
+        T[] newArray = (T[]) new Object[(int) (EXPAND_RATE * elemArray.length)];
         // 将原来的数组按照“环”，从front拷贝到tail(此时front == tail)，直接使用数组大小最合理
         // 拷贝完成后就将front和tail重新放到合适的位置，(新数组还未成环)，此时就让front为0，
         // tail为数组中的最后一个元素的下一个元素
@@ -106,8 +106,12 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         moveCycle(Direction.RIGHT, DequeLocation.TAIL);
     }
 
-    public boolean isEmpty() { return size == 0; }
-    public int size() { return size; }
+    public boolean isEmpty() {
+        return size == 0;
+    }
+    public int size() {
+        return size;
+    }
 
     public void printDeque() {
         int iter = front;
@@ -118,13 +122,13 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         System.out.println();
     }
 
-    private double getLoadRate() { return (double)size / elemArray.length; }
+    private double getLoadRate() { return (double) size / elemArray.length; }
 
     /**
      * 处理数组元素过少的问题，让数组缩小
      */
     private void handleLowLoad(DequeLocation l) {
-        T[] newArray = (T[]) new Object[(int)(SHRINK_RATE * elemArray.length)];
+        T[] newArray = (T[]) new Object[(int) (SHRINK_RATE * elemArray.length)];
         // 表示removeFirst
         if (l == DequeLocation.FRONT) {
             for (int i = 0; i < size; ++i) {
@@ -149,7 +153,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
      * 此时需要在删除元素之前就直接调整数组的大小，然后再删除元素
      * */
     public T removeFirst() {
-        if (size == 0) return null;
+        if (size == 0) {
+            return null;
+        }
         --size; // 先不删除元素，但是先将size - 1
         T result = elemArray[front]; // 获取结果
         if (getLoadRate() < LOWEST_LOAD && elemArray.length >= 16) {
@@ -161,7 +167,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public T removeLast() {
-        if (size == 0) return null;
+        if (size == 0) {
+            return null;
+        }
         --size; // 先不删除元素，但是先将size - 1
         T result = elemArray[getMoveCycle(Direction.LEFT, DequeLocation.TAIL)]; // 获取结果
         if (getLoadRate() < LOWEST_LOAD && elemArray.length >= 16) {
@@ -173,14 +181,18 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public T get(int index) {
-        if (size == 0) return null;
-        if (index >= size || index < 0) return null;
+        if (size == 0) {
+            return null;
+        }
+        if (index >= size || index < 0) {
+            return null;
+        }
         return elemArray[(front + index) % elemArray.length];
     }
 
     private class DequeIterator implements Iterator<T> {
         private int curPos; // 表示即将访问的索引位置，初始即将访问索引0
-        public DequeIterator() {
+        DequeIterator() {
             curPos = 0;
         }
 
@@ -198,17 +210,15 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public boolean equals(Object o) {
-        if (this == o) return false;
-        if (o == null) return false;
-        if (!(o instanceof LinkedListDeque)) return false;
-        ArrayDeque<T> other = (ArrayDeque<T>) o;
-        if (other.size() != this.size()) return false;
-        int iter1 = this.front, iter2 = other.front;
-        for (int i = 0; i < this.size; ++i) {
-            // NOTE obj之间的比较最好用封装的equals
-            if (!this.elemArray[iter1].equals(other.elemArray[iter2])) return false;
-            iter1 = (iter1 + 1) % this.elemArray.length;
-            iter2 = (iter2 + 1) % other.elemArray.length;
+        if (this == o) { return true; }
+        if (o == null) { return false; }
+        if (!(o instanceof Deque)) { return false; }
+        Deque<T> other = (Deque<T>) o;
+        if (other.size() != this.size()) { return false; }
+        for (int i = 0; i < this.size(); ++i) {
+            if (!this.get(i).equals(other.get(i))) {
+                return false;
+            }
         }
         return true;
     }

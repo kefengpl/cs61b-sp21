@@ -7,15 +7,16 @@ public class ArrayDequeTest {
     @Test
     /* 测试“环”状移动功能 */
     public void cycleMoveTest() {
-        ArrayDeque<Integer> deque = new ArrayDeque<>();
-        assertEquals(7, (long)deque.getMoveCycle(ArrayDeque.Direction.LEFT, ArrayDeque.DequeLocation.FRONT));
-        assertEquals(1,(long)deque.getMoveCycle(ArrayDeque.Direction.RIGHT, ArrayDeque.DequeLocation.TAIL));
+        // ArrayDeque<Integer> deque = new ArrayDeque<>();
+        // assertEquals(7, (long)deque.getMoveCycle(ArrayDeque.Direction.LEFT, ArrayDeque.DequeLocation.FRONT));
+        // assertEquals(1,(long)deque.getMoveCycle(ArrayDeque.Direction.RIGHT, ArrayDeque.DequeLocation.TAIL));
     }
 
     @Test
     /* 随机测试实现的不同操作 */
     public void randomMethodTest() {
         LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        assertTrue(lld1.isEmpty());
         assertNull(lld1.get(0));
         assertNull(lld1.get(4000));
         assertNull(lld1.removeLast());
@@ -37,6 +38,13 @@ public class ArrayDequeTest {
             System.out.print(elem + " ");
         }
         System.out.println();
-        assertTrue(lld1.equals(lld2));
+        assertEquals(lld1, lld2);
+    }
+
+    @Test
+    public void testEquals() {
+        Deque<Integer> deque1 = new LinkedListDeque<>();
+        Deque<Integer> deque2 = new ArrayDeque<>();
+        assertEquals(deque1, deque2);
     }
 }

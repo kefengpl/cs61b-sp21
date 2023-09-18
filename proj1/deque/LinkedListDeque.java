@@ -15,7 +15,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         T elem;
         Node last; // 指针指向该节点的上一个结点
         Node next; // 指针指向该结点的下一个结点
-        public Node(T val) {
+        Node(T val) {
             elem = val;
             last = null;
             next = null;
@@ -48,6 +48,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         newNode.last = head;
         newNode.next = head.next;
         head.next = newNode;
+        newNode.next.last = newNode; // BUG修复：忘记将原来的第一个数值结点的last指向新结点
         if (size++ == 0) {
             tail = newNode;
             head.last = tail;
@@ -89,7 +90,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
      * @return 被删除的第一个元素的结点
      * */
     public T removeFirst() {
-        if (isEmpty()) return null;
+        if (isEmpty()) { return null; }
         // 疑惑：这里的removedVal指向结点数值，那么结点还能被销毁吗？
         T removedVal = head.next.elem;
         head.next = head.next.next;
@@ -107,7 +108,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public T removeLast() {
-        if (isEmpty()) return null;
+        if (isEmpty()) { return null; }
         T removedVal = tail.elem;
         tail = tail.last;
         tail.next = head;
@@ -117,8 +118,8 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public T get(int index) {
-        if (isEmpty()) return null;
-        if (index < 0 || index >= size) return null;
+        if (isEmpty()) { return null; }
+        if (index < 0 || index >= size) { return null; }
         Node iter = head.next;
         for (int i = 0; i < index; ++i) {
             iter = iter.next;
@@ -128,7 +129,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
 
     private class DequeIterator implements Iterator<T> {
         private int curPos; // 表示即将访问的索引位置，初始即将访问索引0
-        public DequeIterator() {
+        DequeIterator() {
             curPos = 0;
         }
 
@@ -146,15 +147,15 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public boolean equals(Object o) {
-        if (this == o) return false;
-        if (o == null) return false;
-        if (!(o instanceof LinkedListDeque)) return false;
-        LinkedListDeque<T> other = (LinkedListDeque<T>) o;
-        if (other.size() != this.size()) return false;
-        Node iter1 = this.head.next, iter2 = other.head.next;
-        for (int i = 0; i < this.size; ++i) {
-            // NOTE obj之间的比较最好用封装的equals
-            if (!iter1.elem.equals(iter2.elem)) return false;
+        if (this == o) { return true; }
+        if (o == null) { return false; }
+        if (!(o instanceof Deque)) { return false; }
+        Deque<T> other = (Deque<T>) o;
+        if (other.size() != this.size()) { return false; }
+        for (int i = 0; i < this.size(); ++i) {
+            if (!this.get(i).equals(other.get(i))) {
+                return false;
+            }
         }
         return true;
     }
@@ -175,8 +176,8 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
      * wrapper function，里面包含了一个递归实现
      * */
     public T getRecursive(int index) {
-        if (isEmpty()) return null;
-        if (index < 0 || index >= size) return null;
+        if (isEmpty()) { return null; }
+        if (index < 0 || index >= size) { return null; }
         return recursive(index, head);
     }
 }

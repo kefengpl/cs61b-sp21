@@ -153,4 +153,15 @@ public class LinkedListDequeTest {
         assertNull(lld1.removeLast());
         assertNull(lld1.removeFirst());
     }
+
+    @Test
+    public void removeLastTest() {
+        LinkedListDeque<Integer> lld = new LinkedListDeque<>();
+        assertTrue(lld.isEmpty());
+        lld.addFirst(15);
+        lld.addFirst(7);
+        assertEquals(15, (long) lld.removeLast());
+        assertEquals(7, (long) lld.removeLast());
+        assertTrue(lld.isEmpty());
+    }
 }
