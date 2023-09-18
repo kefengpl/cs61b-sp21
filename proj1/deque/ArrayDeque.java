@@ -108,10 +108,6 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         moveCycle(Direction.RIGHT, DequeLocation.TAIL);
     }
 
-    public boolean isEmpty() {
-        return size == 0;
-    }
-
     public int size() {
         return size;
     }
