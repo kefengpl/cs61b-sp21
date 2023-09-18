@@ -90,7 +90,9 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
      * @return 被删除的第一个元素的结点
      * */
     public T removeFirst() {
-        if (isEmpty()) { return null; }
+        if (isEmpty()) {
+            return null;
+        }
         // 疑惑：这里的removedVal指向结点数值，那么结点还能被销毁吗？
         T removedVal = head.next.elem;
         head.next = head.next.next;
@@ -108,7 +110,9 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public T removeLast() {
-        if (isEmpty()) { return null; }
+        if (isEmpty()) {
+            return null;
+        }
         T removedVal = tail.elem;
         tail = tail.last;
         tail.next = head;
@@ -118,8 +122,12 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public T get(int index) {
-        if (isEmpty()) { return null; }
-        if (index < 0 || index >= size) { return null; }
+        if (isEmpty()) {
+            return null;
+        }
+        if (index < 0 || index >= size) {
+            return null;
+        }
         Node iter = head.next;
         for (int i = 0; i < index; ++i) {
             iter = iter.next;
@@ -147,11 +155,19 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null) { return false; }
-        if (!(o instanceof Deque)) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (!(o instanceof Deque)) {
+            return false;
+        }
         Deque<T> other = (Deque<T>) o;
-        if (other.size() != this.size()) { return false; }
+        if (other.size() != this.size()) {
+            return false;
+        }
         for (int i = 0; i < this.size(); ++i) {
             if (!this.get(i).equals(other.get(i))) {
                 return false;
@@ -176,8 +192,12 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
      * wrapper function，里面包含了一个递归实现
      * */
     public T getRecursive(int index) {
-        if (isEmpty()) { return null; }
-        if (index < 0 || index >= size) { return null; }
+        if (isEmpty()) {
+            return null;
+        }
+        if (index < 0 || index >= size) {
+            return null;
+        }
         return recursive(index, head);
     }
 }

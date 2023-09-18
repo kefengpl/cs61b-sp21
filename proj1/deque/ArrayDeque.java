@@ -109,6 +109,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     public boolean isEmpty() {
         return size == 0;
     }
+
     public int size() {
         return size;
     }
@@ -122,7 +123,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         System.out.println();
     }
 
-    private double getLoadRate() { return (double) size / elemArray.length; }
+    private double getLoadRate() {
+        return (double) size / elemArray.length;
+    }
 
     /**
      * 处理数组元素过少的问题，让数组缩小
@@ -210,11 +213,19 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null) { return false; }
-        if (!(o instanceof Deque)) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (!(o instanceof Deque)) {
+            return false;
+        }
         Deque<T> other = (Deque<T>) o;
-        if (other.size() != this.size()) { return false; }
+        if (other.size() != this.size()) {
+            return false;
+        }
         for (int i = 0; i < this.size(); ++i) {
             if (!this.get(i).equals(other.get(i))) {
                 return false;
