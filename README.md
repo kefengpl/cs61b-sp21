@@ -45,4 +45,8 @@ CS61B for Spring2021
 
 使用正确的数组和我们实现的数组的结果进行对比即可。使用均匀分布随机数uniform 0---n来实现随机调用方法，对于```addFirst(x)```这种没有返回值的方法，可以使用```assertEquals(generateMsg(failSeq), solu_deque.get(0), stu_deque.get(0))```来判断插入是否成功; 使用List等储存函数调用的String，即可在出错时将List的元素按行打印，得到发生错误过程的函数调用信息。
 
+(4) Guitar Hero：基于(1)实现的数据结构实现一些算法
+
+按照要求实现即可。没有其它技巧。
+
 
