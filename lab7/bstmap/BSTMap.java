@@ -193,7 +193,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     /**
      * 我们假设以递增序列进行迭代。实现策略：非递归中序遍历(用到栈)
      * */
-    class BSTMapIterator implements Iterator<K> {
+    private class BSTMapIterator implements Iterator<K> {
         private Stack<Node> stack = new Stack<>();
 
         /**
@@ -241,6 +241,6 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
      * 二叉树中序打印
      * */
     public void printInOrder() {
-        
+
     }
 }
