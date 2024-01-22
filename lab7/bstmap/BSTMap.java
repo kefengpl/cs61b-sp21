@@ -7,7 +7,7 @@ import java.util.*;
  * @Date 2024/1/22 19:56
  * @Description CS61B LAB7 实现 BSTMap。显然，key -- value 结构是以一个 Node 存储的
  */
-public class BSTMap<K extends Comparable, V> implements Map61B<K, V> {
+public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     /**
      * Inner Type Node
      * */
@@ -24,10 +24,10 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V> {
         }
     }
 
-    Node root = null; // 初始化根结点
-    Integer size = 0; // 该 Map 有多少个结点？
+    private Node root = null; // 初始化根结点
+    private Integer size = 0; // 该 Map 有多少个结点？
 
-    void swapNodeContent(Node node1, Node node2) {
+    private void swapNodeContent(Node node1, Node node2) {
         K tempKey = node1.key;
         node1.key = node2.key;
         node2.key = tempKey;
@@ -47,7 +47,7 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V> {
      * 递归查找是否包含某个 key
      * @return Node 查找到的结点本身的引用。如果不存在，就返回 null
      * */
-    Node findKey(Node root, K key) {
+    private Node findKey(Node root, K key) {
         if (root == null) {
             return null;
         }
@@ -125,7 +125,7 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V> {
      * 获取某个结点的直接后继
      * 就是它右子树一路向左的结点
      * */
-    Node nextNodeOf(Node root) {
+    private Node nextNodeOf(Node root) {
         if (root == null) {
             return null;
         }
@@ -143,7 +143,7 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V> {
      * 递归实现删除结点，返回删除结点后的根结点
      * 假设 key 一定存在且符合要求，因为调用它的函数会检查这个事情
      * */
-    Node innerRemove(Node root, K key) {
+    private Node innerRemove(Node root, K key) {
         if (root == null) {
             return null;
         }
@@ -235,5 +235,12 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V> {
     @Override
     public Iterator<K> iterator() {
         return new BSTMapIterator();
+    }
+
+    /**
+     * 二叉树中序打印
+     * */
+    public void printInOrder() {
+        
     }
 }
