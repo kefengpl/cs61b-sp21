@@ -1,0 +1,11 @@
+Enter # strings to insert into your hashmap.MyHashMap: 100000
+class hashmap.MyHashMap: 3.89 sec
+
+Enter # strings to insert into Java's HashMap: 100000
+Java's Built-in HashMap: 1.08 sec(显然，你的链表很难比过别人的红黑树)
+
+class hashmap.MyHashMapALBuckets: 3.89 sec
+class hashmap.MyHashMapLLBuckets: 4.11 sec
+class hashmap.MyHashMapTSBuckets: 4.23 sec
+class hashmap.MyHashMapHSBuckets: 4.12 sec
+class hashmap.MyHashMapPQBuckets: 4.13 sec

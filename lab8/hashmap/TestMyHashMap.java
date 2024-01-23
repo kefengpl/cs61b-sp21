@@ -1,9 +1,13 @@
 package hashmap;
 
 import static org.junit.Assert.*;
+
+import afu.org.checkerframework.checker.igj.qual.I;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -157,5 +161,20 @@ public class TestMyHashMap {
         studentIDs.put("evil alan", 345);
         assertEquals(345, studentIDs.get("evil alan").intValue());
         assertEquals(studentIDs.get("evil alan"), studentIDs.get("alan"));
+    }
+
+    @Test
+    public void test1() {
+        double d = (double) 5 / 2;
+        System.out.println("d = " + d);
+    }
+
+    @Test
+    public void test2() {
+        HashMap<Object, Integer> map = new HashMap<>(16);
+        for (int i = 0; i < 8; ++i) {
+            map.put("hi" + i, i + 2);
+            map.put(i, i + 1);
+        }
     }
 }
