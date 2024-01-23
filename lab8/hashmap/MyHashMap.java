@@ -229,6 +229,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
                 if (innerCheck) {
                     removeVal = node.value;
                     bucket.remove(node);
+                    keySet.remove(key);
                 }
             }
         }
