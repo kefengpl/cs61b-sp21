@@ -8,12 +8,13 @@ public class Collatz {
      * if n is even, then return n / 2
      * */
     public static int nextNumber(int n) {
-        if (n  == 128) {
+        if (n == 1) {
             return 1;
-        } else if (n == 5) {
-            return 3 * n + 1;
+        }
+        if (n % 2 == 0) {
+            return n / 2;
         } else {
-            return n * 2;
+            return 3 * n + 1;
         }
     }
 
