@@ -1,14 +1,6 @@
 package capers;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
@@ -151,4 +143,92 @@ class Utils {
         return new RuntimeException(String.format(msg, args));
     }
 
+    /**
+     * write a string single line
+     * */
+    public static void writeStringLine(File file, String line) {
+        BufferedWriter bufferedWriter = null;
+        FileWriter fileWriter = null;
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            fileWriter = new FileWriter(file, true);
+            bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write(line);
+            bufferedWriter.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bufferedWriter.close();
+                fileWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void readAll(File file) {
+        FileReader fileReader = null;
+        BufferedReader bufferedReader = null;
+        try {
+            fileReader = new FileReader(file);
+            bufferedReader = new BufferedReader(fileReader);
+            String line = null;
+            while ((line = bufferedReader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bufferedReader.close();
+                fileReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * serialize store one object to files
+     * */
+    public static <T> void serializeObject(File file, T object) {
+        ObjectOutputStream objectOutputStream = null;
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            objectOutputStream = new ObjectOutputStream(new FileOutputStream(file));
+            objectOutputStream.writeObject(object);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                objectOutputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static <T> T parseObject(File file, Class<T> clazz) {
+        ObjectInputStream inputStream = null;
+        T castObject = null;
+        try {
+            inputStream = new ObjectInputStream(new FileInputStream(file));
+            castObject = clazz.cast(inputStream.readObject());
+            return castObject;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return castObject;
+    }
 }
