@@ -1,24 +1,100 @@
 package gitlet;
 
-/** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import static gitlet.GitletConstants.*;
+
+/**
+ * @description Driver class for Gitlet, a subset of the Git version-control system.
+ * hint: checkout command will also restore the index region(so-called "work tree clean")
+ * checkout just remove the HEAD pointer to a commit (maybe in other branch)
+ *
+ * use a HEAD FILE to store e.g. HEAD --> master information
+ * use a branches directory to store different branch and it's pointer to commit
+ * for example: master branch uses a file named [master] and store [commit id(SHA-1)] in it.
+ *
+ * hint: runnable has no args and no return! you can just regard runnable as a normal class
  */
 public class Main {
 
-    /** Usage: java gitlet.Main ARGS, where ARGS contains
-     *  <COMMAND> <OPERAND1> <OPERAND2> ... 
-     */
+    /**
+     * @note
+     * other error to be supplied
+     * 1. inputs a command with the wrong number or format of operands --> Incorrect operands.
+     * 2. command must with .gitlet folder created but hasn't been created --> Not in an initialized Gitlet directory.
+     * */
     public static void main(String[] args) {
-        // TODO: what if args is empty?
+        if (args.length == 0) {
+            System.out.println("Please enter a command.");
+            return;
+        }
         String firstArg = args[0];
+        String[] restArgs = Arrays.copyOfRange(args, 1, args.length);
         switch(firstArg) {
             case "init":
-                // TODO: handle the `init` command
+                if (restArgs.length == 0) {
+                    Repository.init();
+                } else {
+                    System.out.println(INCORRECT_OPERANDS_WARNING);
+                }
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
+                commandRunner(restArgs.length == 1, Repository::add, restArgs[0]);
                 break;
-            // TODO: FILL THE REST IN
+            case "commit":
+                commandRunner(restArgs.length == 1, Repository::commit, restArgs[0]);
+                break;
+            case "rm":
+                commandRunner(restArgs.length == 1, Repository::rm, restArgs[0]);
+                break;
+            case "log":
+                commandRunner(restArgs.length == 0, Repository::log);
+                break;
+            case "global-log":
+                commandRunner(restArgs.length == 0, Repository::globalLog);
+                break;
+            case "checkout":
+                commandRunner(restArgs.length >= 1 && restArgs.length <= 3, Repository::checkout, restArgs);
+            case "test":
+                break;
+            default:
+                System.out.println("No command with that name exists.");
         }
+    }
+
+    /***
+     * check one command whether after init() and check arg numbers at the same time
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
+     */
+    private static <T> void commandRunner(boolean argsNumberCheck, Consumer<T> function, T args) {
+        if (!Repository.isInitialized()) {
+            System.out.println(UNINITIALIZED_WARNING);
+            return;
+        }
+        if (!argsNumberCheck) {
+            System.out.println(INCORRECT_OPERANDS_WARNING);
+            return;
+        }
+        function.accept(args);
+    }
+
+    /***
+     * similar to upper function with no args.
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
+     */
+    private static void commandRunner(boolean argsNumberCheck, Runnable function) {
+        if (!Repository.isInitialized()) {
+            System.out.println(UNINITIALIZED_WARNING);
+            return;
+        }
+        if (!argsNumberCheck) {
+            System.out.println(INCORRECT_OPERANDS_WARNING);
+            return;
+        }
+        function.run();
     }
 }

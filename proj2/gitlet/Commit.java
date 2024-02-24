@@ -1,26 +1,81 @@
 package gitlet;
 
-// TODO: any imports you need here
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 
-import java.util.Date; // TODO: You'll likely use this in this class
-
-/** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
- *
- *  @author TODO
+/**
+ * Interpret transient:
+ * when you write an object to file, it will write itself and all members it references to
+ * Don’t use Java pointers to refer to commits and blobs in your runtime objects, but instead use SHA-1 hash strings
+ * Maintain a runtime map(never write to file) between these SHA-1 strings and the runtime objects they refer to.
+ * (I think this runtime map should be stored in Repository, not in this class)
+ * @description this class is just a JavaBean which stores critical information. Not for doing anything.
+ * this class will be serialized to a file in [commits] folder in [.gitlet]
  */
-public class Commit {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
-     */
-
+public class Commit implements Serializable {
     /** The message of this Commit. */
     private String message;
+    /** the commit time stamp */
+    private Date commitTime;
 
-    /* TODO: fill in the rest of this class. */
+    /** parentSHA1 value */
+    private String ParentId;
+    /** store flat file names and its version(represented by SHA-1) */
+    private HashMap<String, String> fileVersionMap;
+
+    /***
+     * fileVersionMap will never be null.
+     */
+    public Commit() {
+        fileVersionMap = new HashMap<>();
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Date getCommitTime() {
+        return commitTime;
+    }
+
+    public String getParentId() {
+        return ParentId;
+    }
+
+    public HashMap<String, String> getFileVersionMap() {
+        return fileVersionMap;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setCommitTime(Date commitTime) {
+        this.commitTime = commitTime;
+    }
+
+    public void setParentId(String ParentId) {
+        this.ParentId = ParentId;
+    }
+
+    public void setFileVersionMap(HashMap<String, String> fileVersionMap) {
+        this.fileVersionMap = fileVersionMap;
+    }
+
+    /***
+     * print key info for log command
+     */
+    public void printCommitInfo() {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+        System.out.println("===");
+        System.out.println("commit " + CommitUtils.getCommitId(this));
+        System.out.println("Date: " + sdf.format(this.commitTime));
+        System.out.println(this.message);
+        System.out.println();
+    }
 }
