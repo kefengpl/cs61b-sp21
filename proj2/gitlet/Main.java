@@ -57,6 +57,22 @@ public class Main {
                 break;
             case "checkout":
                 commandRunner(restArgs.length >= 1 && restArgs.length <= 3, Repository::checkout, restArgs);
+                break;
+            case "branch":
+                commandRunner(restArgs.length == 1, Repository::branch, restArgs[0]);
+                break;
+            case "find":
+                commandRunner(restArgs.length == 1, Repository::find, restArgs[0]);
+                break;
+            case "status":
+                commandRunner(restArgs.length == 0, Repository::status);
+                break;
+            case "rm-branch":
+                commandRunner(restArgs.length == 1, Repository::removeBranch, restArgs[0]);
+                break;
+            case "reset":
+                commandRunner(restArgs.length == 1, Repository::reset, restArgs[0]);
+                break;
             case "test":
                 break;
             default:

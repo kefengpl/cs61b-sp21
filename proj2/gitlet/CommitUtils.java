@@ -25,6 +25,7 @@ public class CommitUtils {
         commit.setMessage(message);
         commit.setCommitTime(new Date(0));
         commit.setParentId(null);
+        commit.setSecondParentId(null);
         return commit;
     }
 
@@ -43,6 +44,7 @@ public class CommitUtils {
         commit.setParentId(parentCommitId);
         commit.setFileVersionMap(fileVersionMap == null ? new HashMap<>() : fileVersionMap);
         commit.setCommitTime(new Date());
+        commit.setSecondParentId(null);
         return commit;
     }
 
@@ -126,6 +128,7 @@ public class CommitUtils {
     }
 
     public static boolean isTrackedByCommit(Commit commit, String fileName) {
+        assert commit != null && fileName != null;
         return commit.getFileVersionMap().containsKey(fileName);
     }
 

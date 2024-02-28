@@ -23,7 +23,11 @@ public class Commit implements Serializable {
     private Date commitTime;
 
     /** parentSHA1 value */
-    private String ParentId;
+    private String parentId;
+
+    /** second Parent */
+    private String secondParentId;
+
     /** store flat file names and its version(represented by SHA-1) */
     private HashMap<String, String> fileVersionMap;
 
@@ -43,7 +47,11 @@ public class Commit implements Serializable {
     }
 
     public String getParentId() {
-        return ParentId;
+        return parentId;
+    }
+
+    public String getSecondParentId() {
+        return secondParentId;
     }
 
     public HashMap<String, String> getFileVersionMap() {
@@ -59,7 +67,11 @@ public class Commit implements Serializable {
     }
 
     public void setParentId(String ParentId) {
-        this.ParentId = ParentId;
+        this.parentId = ParentId;
+    }
+
+    public void setSecondParentId(String secondParentId) {
+        this.secondParentId = secondParentId;
     }
 
     public void setFileVersionMap(HashMap<String, String> fileVersionMap) {

@@ -1,6 +1,5 @@
 package gitlet;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -128,15 +127,17 @@ public class Repository {
      * @param fileName the file name in work directory
      */
     public static void rm(String fileName) {
-        boolean staged = indexMap.containsKey(fileName);
-        boolean trackedByHeadCommit = CommitUtils.isTrackedByCommit(getHeadCommitId(), fileName);
+        Commit commit = CommitUtils.readCommit(getHeadCommitId());
+        boolean staged = IndexUtils.isStaged(fileName, commit);
+        boolean trackedByHeadCommit = CommitUtils.isTrackedByCommit(commit, fileName);
         if (!staged && !trackedByHeadCommit) {
             System.out.println("No reason to remove the file.");
+            return;
         }
         IndexUtils.unstageFile(fileName);
         IndexUtils.saveIndex(); // note: all changes must be saved
         if (trackedByHeadCommit) {
-            restrictedDelete(fileName);
+            restrictedDelete(join(CWD, fileName));
         }
     }
 
@@ -156,11 +157,32 @@ public class Repository {
      */
     public static void globalLog() {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
-        if (commitIdList == null) {
+        if (commitIdList == null || commitIdList.isEmpty()) {
             return;
         }
         for (String commitId : commitIdList) {
             CommitUtils.readCommit(commitId).printCommitInfo();
+        }
+    }
+
+    /**
+     * Prints out the ids of all commits that have the given commit message, one per line
+     */
+    public static void find(String commitMessage) {
+        List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
+        if (commitIdList == null || commitIdList.isEmpty()) {
+            return;
+        }
+        boolean printFlag = false;
+        for (String commitId : commitIdList) {
+            Commit commit = CommitUtils.readCommit(commitId);
+            if (commitMessage.equals(commit.getMessage())) {
+                System.out.println(CommitUtils.getCommitId(commit));
+                printFlag = true;
+            }
+        }
+        if (!printFlag) {
+            System.out.println("Found no commit with that message.");
         }
     }
 
@@ -169,23 +191,78 @@ public class Repository {
      * @param args rest args from command line.
      */
     public static void checkout(String...args) {
+        Commit commit = null;
         if (args.length > 1) {
             String fileName;
-            Commit commit;
             if (args.length == 2) {
+                if (!args[0].equals("--")) {
+                    System.out.println("Incorrect operands.");
+                }
                 fileName = args[1];
                 commit = CommitUtils.readCommit(getHeadCommitId());
             } else {
+                if (!args[1].equals("--")) {
+                    System.out.println("Incorrect operands.");
+                }
                 fileName = args[2];
                 commit = CommitUtils.readCommitByPrefix(args[0]);
                 if (commit == null) {
                     System.out.println("No commit with that id exists.");
+                    return;
                 }
             }
             checkoutFile(commit, fileName);
         } else {
-            System.out.println("branch function developing...");
+            commit = CommitUtils.readCommit(getHeadCommitId());
+            checkoutBranch(commit, args[0]);
         }
+    }
+
+    /**
+     * change to new branch's pointer commit, just like the new branch's commit just happen.
+     * so indexMap(& .gitlet/index) is the same as the new branch commit fileVersionMap, stagedFiles(& .gitlet/staged-files) is cleared.
+     * @param commit current commit object (before branch change)
+     * @param branchName the name of the branch to be changed to
+     */
+    private static void checkoutBranch(Commit commit, String branchName) {
+        if (!BranchUtils.branchExists(branchName)) { // branchExists() will assert branchName != null
+            System.out.println("No such branch exists.");
+            return;
+        }
+        if (branchName.equals(HEAD)) {
+            System.out.println("No need to checkout the current branch.");
+            return;
+        }
+        List<String> CWDFileNames = plainFilenamesIn(CWD);
+        assert CWDFileNames != null;
+        for (String fileName : CWDFileNames) {
+            if (!CommitUtils.isTrackedByCommit(commit, fileName)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
+            }
+        }
+        // restore commit to CWD
+        Commit newBranchCommit = CommitUtils.readCommit(BranchUtils.getCommitId(branchName));
+        restoreCommit(newBranchCommit);
+
+        // 3. set HEAD == new branch name
+        setHEAD(branchName);
+    }
+
+    /**
+     * restore this commit to CWD, and restore index region(clear stagedFileContents and restore indexMap)
+     * just like the commit just happen.
+     */
+    private static void restoreCommit(Commit commit) {
+        // 1. restore files to CWD
+        FileUtils.restoreCommitFiles(commit);
+
+        // 2. restore indexMap
+        // note: to keep consistency, checkout branch just like the new branch's commit() just happen
+        // so it will restore indexMap & .gitlet/index, but stagedFiles and its file stay empty.
+        indexMap = commit.getFileVersionMap();
+        stagedFileContents.clear();
+        IndexUtils.saveIndex();
     }
 
     /***
@@ -201,14 +278,99 @@ public class Repository {
         FileUtils.writeCWDFile(fileName, fileContent);
     }
 
+    /***
+     * Creates a new branch with the given name, and points it at the current head commit.
+     * @param branchName the new branch name you create.
+     */
+    public static void branch(String branchName) {
+        if (BranchUtils.branchExists(branchName)) {
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        BranchUtils.saveCommitId(branchName, getHeadCommitId());
+    }
+
+    /**
+     * delete branch file of branchName
+     */
+    public static void removeBranch(String branchName) {
+        if (!BranchUtils.branchExists(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        if (HEAD.equals(branchName)) {
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+        BranchUtils.removeBranch(branchName);
+    }
+
+    /**
+     * print out some status message
+     */
+    public static void status() {
+        // print branches
+        List<String> allBranchNames = BranchUtils.getAllBranchNames();
+        System.out.println("=== Branches ===");
+        for (String branchName : allBranchNames) {
+            System.out.println((HEAD.equals(branchName) ? "*" : "") + branchName);
+        }
+        System.out.println();
+
+        // print staged files
+        Commit commit = CommitUtils.readCommit(getHeadCommitId());
+        List<String> stagedFileNames = IndexUtils.getStagedFiles(commit);
+        System.out.println("=== Staged Files ===");
+        stagedFileNames.forEach(System.out::println);
+        System.out.println();
+
+        // print removed files
+        List<String> removedFileNames = IndexUtils.getRemovedFiles(commit);
+        System.out.println("=== Removed Files ===");
+        removedFileNames.forEach(System.out::println);
+        System.out.println();
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        List<StringBuffer> modifiedNotStagedForCommit = IndexUtils.modifiedNotStagedForCommit(commit);
+        List<StringBuffer> deletedNotStagedForCommit = IndexUtils.deletedNotStagedForCommit(commit);
+        modifiedNotStagedForCommit.forEach(s -> s.append(" (modified)"));
+        deletedNotStagedForCommit.forEach(s -> s.append(" (deleted)"));
+        modifiedNotStagedForCommit.addAll(deletedNotStagedForCommit);
+        modifiedNotStagedForCommit.sort(StringBuffer::compareTo);
+        modifiedNotStagedForCommit.forEach(System.out::println);
+        System.out.println();
+
+        // ("Untracked Files") is for files present in the working directory but neither staged for addition nor tracked.
+        System.out.println("=== Untracked Files ===");
+        List<String> untrackedFileNames = IndexUtils.getUntrackedFiles(commit);
+        untrackedFileNames.forEach(System.out::println);
+        System.out.println();
+    }
+
+    /**
+     * The command is essentially checkout of an arbitrary commit that also changes the current branch head.
+     */
+    public static void reset(String commitIdPrefix) {
+        Commit commit = CommitUtils.readCommitByPrefix(commitIdPrefix);
+        if (commit == null) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+        String commitId = CommitUtils.getCommitId(commit);
+        restoreCommit(commit);
+        BranchUtils.saveCommitId(HEAD, commitId);
+    }
+
 
     /**
      * It set HEAD --> branch_name (other function maybe about set head on commit,
      * but this project will ignore this situation)
-     * At the same time, it changes the HEAD file
+     * At the same time, it saves the HEAD file
+     * @param branchName the param must exist, otherwise it will throw AssertionError
      * */
     public static void setHEAD(String branchName) {
-        HEAD = MASTER_BRANCH_NAME;
+        assert BranchUtils.branchExists(branchName);
+        HEAD = branchName;
         writeContents(HEAD_FILE, branchName);
     }
 
