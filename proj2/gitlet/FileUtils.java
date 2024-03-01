@@ -75,4 +75,13 @@ public class FileUtils {
             writeCWDFile(fileName, getFileContent(fileVersionMap.get(fileName)));
         }
     }
+
+    /**
+     * @param fileName the file name of some commit which will be restored to CWD or deleted in CWD
+     */
+    public static boolean isOverwritingOrDeletingCWDUntracked(String fileName, Commit currentCommit) {
+        List<String> CWDFileNames = plainFilenamesIn(CWD);
+        assert CWDFileNames != null && currentCommit != null;
+        return !CommitUtils.isTrackedByCommit(currentCommit, fileName) && CWDFileNames.contains(fileName);
+    }
 }

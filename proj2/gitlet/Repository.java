@@ -1,8 +1,7 @@
 package gitlet;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
@@ -137,6 +136,7 @@ public class Repository {
         IndexUtils.unstageFile(fileName);
         IndexUtils.saveIndex(); // note: all changes must be saved
         if (trackedByHeadCommit) {
+            // if it is tracked by current commit, you should delete the file in CWD.
             restrictedDelete(join(CWD, fileName));
         }
     }
@@ -359,6 +359,90 @@ public class Repository {
         String commitId = CommitUtils.getCommitId(commit);
         restoreCommit(commit);
         BranchUtils.saveCommitId(HEAD, commitId);
+    }
+
+    /**
+     * @note
+     * If an untracked file in the current commit would be overwritten or deleted by the merge, print There is an
+     * untracked file in the way; delete it, or add and commit it first. and exit; perform this check before doing
+     * anything else.
+     */
+    public static void merge(String branchName) {
+        // pre check fail cases
+        if (!BranchUtils.branchExists(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        if (HEAD.equals(branchName)) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+        Commit currentCommit = CommitUtils.readCommit(getHeadCommitId());
+        List<String> stagedFileNames = IndexUtils.getStagedFiles(currentCommit);
+        List<String> removedFileNames = IndexUtils.getRemovedFiles(currentCommit);
+        if (!stagedFileNames.isEmpty() || !removedFileNames.isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+        // get current-branch commit, target-branch commit & split point commit
+        Commit branchCommit = CommitUtils.readCommit(BranchUtils.getCommitId(branchName));
+        Commit splitPoint = CommitUtils.getSplitCommit(HEAD, branchName);
+
+        // the cases in which the current branch and target branch in the same line
+        if (splitPoint == null || CommitUtils.isSameCommit(branchCommit, splitPoint)) {
+            return; // in this case, head & branch points to the same commit, no need to merge
+        }
+        if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
+            // fast-forward master pointer
+            BranchUtils.saveCommitId(HEAD, BranchUtils.getCommitId(branchName));
+            return;
+        }
+
+        // Complex situation: merge with no conflict or merge with conflict
+        Set<String> splitPointFiles = splitPoint.getFileVersionMap().keySet();
+        Set<String> currentCommitFiles = currentCommit.getFileVersionMap().keySet();
+        Set<String> branchCommitFiles = branchCommit.getFileVersionMap().keySet();
+        // union the upper three set to get all relevant files in three commits
+        // bug: you have to allocate new memory, not reference
+        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles); // there is other usage with variable splitPointFiles
+        allRelevantFiles.addAll(currentCommitFiles);
+        allRelevantFiles.addAll(branchCommitFiles);
+
+        for (String fileName : allRelevantFiles) {
+            boolean splitCurrentConsistent = CommitUtils.isConsistent(fileName, splitPoint, currentCommit);
+            boolean splitBranchConsistent = CommitUtils.isConsistent(fileName, splitPoint, branchCommit);
+            boolean branchCurrentConsistent = CommitUtils.isConsistent(fileName, currentCommit, branchCommit);
+            if ((splitBranchConsistent && !splitCurrentConsistent) || branchCurrentConsistent) {
+                continue;
+            } else if (!splitBranchConsistent && splitCurrentConsistent) {
+                if (!branchCommitFiles.contains(fileName)) {
+                    // in this case, other two commit must contain the file
+                    // remove the file from CWD & not tracked this file in merged commit
+                    // which means drop indexMap's record with this fileName
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                        System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
+                        return;
+                    } else {
+                        rm(fileName);
+                    }
+                } else {
+                    // in this case, we will checkout the file in branchCommit and add it to index
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                        System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
+                        return;
+                    } else {
+                        checkoutFile(branchCommit, fileName);
+                        add(fileName);
+                    }
+                }
+            }
+        }
+        // 1. make commit 2. set this new commit secondParentId
+        commit("Merged " + branchName + " into " + HEAD + ".");
+        Commit mergeCommit = CommitUtils.readCommit(getHeadCommitId());
+        mergeCommit.setSecondParentId(BranchUtils.getCommitId(branchName));
+        // bug: you have to save the merge commit. all changes must be saved
+        CommitUtils.saveCommit(mergeCommit);
     }
 
 

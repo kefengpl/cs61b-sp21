@@ -86,6 +86,9 @@ public class Commit implements Serializable {
         sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
         System.out.println("===");
         System.out.println("commit " + CommitUtils.getCommitId(this));
+        if (secondParentId != null) {
+            System.out.println("Merge: " + parentId.substring(0, 7) + " " + secondParentId.substring(0, 7));
+        }
         System.out.println("Date: " + sdf.format(this.commitTime));
         System.out.println(this.message);
         System.out.println();

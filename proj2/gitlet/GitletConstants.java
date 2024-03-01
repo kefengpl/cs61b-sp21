@@ -28,4 +28,6 @@ public class GitletConstants {
 
     public static final String UNINITIALIZED_WARNING = "Not in an initialized Gitlet directory.";
     public static final String INCORRECT_OPERANDS_WARNING = "Incorrect operands.";
+
+    public static final String MERGE_MODIFY_UNTRACKED_WARNING = "There is an untracked file in the way; delete it, or add and commit it first.";
 }

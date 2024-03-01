@@ -5,7 +5,9 @@ import org.junit.Test;
 
 import javax.swing.plaf.basic.BasicGraphicsUtils;
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -32,5 +34,14 @@ public class SetUsageTest {
 
     @Test
     public void test3() {
+        Map<String, String> map = new HashMap<>();
+        map.put("kefeng", "1");
+        map.put("lida", "2");
+        Map<String, String> map2 = new HashMap<>();
+        map.put("kefeng", "1");
+        map.put("lida--", "2");
+        Set<String> set = map.keySet();
+        set.addAll(map2.keySet());
+        System.out.println(set);
     }
 }

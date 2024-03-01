@@ -132,7 +132,14 @@ public class CommitUtils {
         return commit.getFileVersionMap().containsKey(fileName);
     }
 
+    public static boolean isSameCommit(Commit commit1, Commit commit2) {
+        assert commit1 != null && commit2 != null;
+        return getCommitId(commit1).equals(getCommitId(commit2));
+    }
 
+    /**
+     * trace back to the initial commit
+     */
     public static List<Commit> commitTraceBack(Commit currentCommit) {
         List<Commit> commitList = new LinkedList<>();
         Commit commitPtr = currentCommit;
@@ -141,5 +148,71 @@ public class CommitUtils {
             commitPtr = readCommit(commitPtr.getParentId());
         }
         return commitList;
+    }
+
+    /**
+     * get the split point of two branches
+     * @return if the two list has same length and has same commit list, then return null
+     */
+    public static Commit getSplitCommit(String branchName1, String branchName2) {
+        String branch1CommitId = BranchUtils.getCommitId(branchName1);
+        String branch2CommitId = BranchUtils.getCommitId(branchName2);
+        Commit commit1 = readCommit(branch1CommitId);
+        Commit commit2 = readCommit(branch2CommitId);
+        List<Commit> branch1Traced = commitTraceBack(commit1);
+        List<Commit> branch2Traced = commitTraceBack(commit2);
+        Collections.reverse(branch1Traced); // bug : the list should be  old commit --> new commit !
+        Collections.reverse(branch2Traced);
+        int minLength = Math.min(branch1Traced.size(), branch2Traced.size());
+        for (int i = 0; i < minLength; ++i) {
+            // the front commit of the first different commit is the split point
+            if (!isSameCommit(branch1Traced.get(i), branch2Traced.get(i))) {
+                return branch1Traced.get(i - 1);
+            }
+        }
+        // if the two list has same length and has same commit list, then return null
+        if (branch1Traced.size() == branch2Traced.size()) {
+            return null;
+        }
+        // in minLength range, the two list has same commit, then the end elem of shorter list will be return
+        return branch1Traced.size() < branch2Traced.size() ?
+                branch1Traced.get(branch1Traced.size() - 1) : branch2Traced.get(branch1Traced.size() - 1);
+    }
+
+    /**
+     * return if two commit has a same file version, given the file name
+     * @return if one of the commits doesn't contain the file, return null. else return true or false
+     */
+    public static Boolean hasSameFileVersion(String fileName, Commit commit1, Commit commit2) {
+        assert commit1 != null && commit2 != null && fileName != null;
+        HashMap<String, String> fileVersionMap1 = commit1.getFileVersionMap();
+        HashMap<String, String> fileVersionMap2 = commit2.getFileVersionMap();
+        if (!fileVersionMap1.containsKey(fileName) || !fileVersionMap2.containsKey(fileName)) {
+            return null;
+        }
+        return fileVersionMap1.get(fileName).equals(fileVersionMap2.get(fileName));
+    }
+
+    /**
+     * check consistency of a file with fileName.
+     * what is consistency ? it means two commits:
+     * 1. both have the file or both don't have the file,
+     * 2. if both have the file, it must have the same file version
+     */
+    public static boolean isConsistent(String fileName, Commit commit1, Commit commit2) {
+        assert commit1 != null && commit2 != null && fileName != null;
+        HashMap<String, String> fileVersionMap1 = commit1.getFileVersionMap();
+        HashMap<String, String> fileVersionMap2 = commit2.getFileVersionMap();
+        boolean existInCommit1 = fileVersionMap1.containsKey(fileName);
+        boolean existInCommit2 = fileVersionMap2.containsKey(fileName);
+        if (!existInCommit1 && !existInCommit2) {
+            return true;
+        }
+        if (!existInCommit1 || !existInCommit2) {
+            return false;
+        }
+        Boolean sameContent = hasSameFileVersion(fileName, commit1, commit2);
+        assert sameContent != null;
+        return sameContent;
     }
 }

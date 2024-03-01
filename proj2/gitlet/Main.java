@@ -73,6 +73,9 @@ public class Main {
             case "reset":
                 commandRunner(restArgs.length == 1, Repository::reset, restArgs[0]);
                 break;
+            case "merge":
+                commandRunner(restArgs.length == 1, Repository::merge, restArgs[0]);
+                break;
             case "test":
                 break;
             default:

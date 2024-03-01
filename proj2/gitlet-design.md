@@ -1,22 +1,25 @@
 # GitLet 设计文档
+- 实现一个简化版本的 git。由于代码编译中有中文注释会报错，故代码中的所有说明皆以英文来写。
+- 网上博客对于 git 设计的理解未必正确，如果希望更好地理解 git，最好的方式还是查阅 git 官方文档。
+- 这是UC Berkeley CS61B的一个课程项目，项目说明文档：https://sp21.datastructur.es/materials/proj/proj2/proj2#global-log
+- 此外，为了设计存储方式和存储的文件结构，还需要参考 git 官方文档：https://www.progit.cn/#_plumbing_porcelain
 
-这是UC Berkeley CS61B的一个课程项目，项目说明文档：https://sp21.datastructur.es/materials/proj/proj2/proj2#global-log
-实现一个简化版本的.git。由于代码编译中有中文注释会报错，故代码中的所有说明皆以英文来写。
-
-## Main
-- 通过命令行传入 Main(String...args) 中的args
-- 使用的Java8新特性：方法引用，以实现每个命令的检查、调用与传参，这样做可以减少调用和传参时发生的错误。 
-- 每个命令具体实现在 Repository.java 中。事实上，也可以使用反射。
+## Class: Main
+- 通过命令行传入 Main(String...args) 中的args。在调用具体命令对应的方法之前，该类会对参数个数是否符合要求和仓库是否初始化进行检查。
+- 分支很多时，为了减少编程错误，最好使用反射，因为 switch 分支忘记写 break 的概率极高，项目运行时总会带来意外之喜。但是本课程的教授似乎对反射嗤之以鼻。
+- 因此，这里使用Java8新特性：方法引用，以实现每个命令的检查、调用与传参，这样做可以减少调用和传参时发生的错误。 
+- 每个命令具体实现在 Repository.java 中。
 - 神奇的是，Runnable 在 Java8 中可以当作 Function，它不接受参数，返回是 void。此时，它并不应用于多线程，而是函数接口。
 
-## Repository
+## Class: Repository
 **变量**
-- HEAD: 维护了 HEAD 指针，与 .gitlet/HEAD 关联。在程序启动时，如果已经初始化，就从 .gitlet 中读取 HEAD 文件，HEAD 文件存放的是分支名。比如 HEAD = master。
+- HEAD: 维护了 HEAD 指针，与 .gitlet/HEAD 关联。在程序启动时，如果已经初始化，就从 .gitlet 中读取 HEAD 文件，
+  HEAD 文件存放的是分支名。比如 HEAD = master。
 
 **功能**
-- 实现了各类命令的调用方法
+- 实现了各类命令的调用方法。比如，命令行中输入 add file.txt，那么会调用其中的 add() 函数。
 
-## IndexUtils
+## Class: IndexUtils
 用于处理暂存区保存到磁盘，以及写入暂存区的操作。
 
 **变量**
@@ -48,7 +51,7 @@
 2. 否则向 indexMap 添加一个条目， (文件名-->sha1)，同时向 stagedFileContents 添加 (sha1-->文件具体内容)；随后持久化到 index 和 staged-files 文件里面。
 
 ## commit
-进行一次提交。
+进行一次提交。提示：对于 untracked file，git 在提交时会忽略它们，并且允许提交。
 1. 如果 indexMap 和当前提交(进行本次提交之前的提交)的 fileVersionMap 是一致的，则不提交，因为没有改变。
 2. 生成 commit 对象，叫做 newCommit；当前 commit 记录为 oldCommit
 3. 随后将 oldCommit 和 newCommit 的 fileVersionMap 进行对比，将一些文件从 stagedFileContents 持久化到 .gitlet/objects 中。这种做法的缺陷在于，
@@ -58,7 +61,12 @@
 5. 将当前 branch，比如 master 的指针指向新的 commit id
 
 ## rm
-移除文件，移除规则如下：
+- 直观上，该命令移除暂存区的对应文件。它的思想是这样的：对于被当前提交跟踪的文件，用户应该先在 CWD 删除文件，再调用 rm() 在暂存区标记为删除(add 的反向操作)。
+  因为 rm() 会记录下一次提交时，哪些文件会被添加，哪些文件会被删除。所以下面的执行逻辑中，如果用户没有在 CWD 删除文件，就帮他删除位于 CWD 的文件。
+- 对于当前提交未跟踪的文件，属于用户新添加的文件，只进行暂存区级别的操作(提供 add 的反向操作)，不对 CWD 进行操作，它的状态只有两种 === Untracked Files === / === Staged Files ===。
+- 核心：只有 tracked files 才会在 status() 中被标记为 === Removed files ===，表示将要在下一次提交中移除的文件，
+  恰好是 添加 CWD 文件 --> add() --> commit() 的反向操作：删除 CWD 文件 --> rm() --> 。
+核心功能依然是移除暂存区中的文件(或者将某文件在暂存区标记为移除)，移除规则如下：
 1. 如果一个文件没有被暂存区和commit跟踪(在 commit 的 fileVersionMap 中)，报错，没有移除文件的必要。
 2. 如果一个文件被暂存区跟踪，就将它移除暂存区，注意，这也需要保存，调用saveIndex().
 3. 如果文件被 commit 跟踪，就在工作区中删除该文件。
@@ -71,14 +79,63 @@
 ## checkout (branch)
 
 ## find
-它可以打印出 符合某个 commit message 的 commit 的所有 id
+它可以打印出 符合某个 commit message 的 commit 的所有 id。实现起来很容易，
+直接去 .gitlet/commits 中逐个读取文件到内存然后分析其 commit message 即可。
 
 ## branch
-创建分支，它需要做的是：在.gitlet/branches中创建一个新文件，文件名是 分支名，文件内容是head指针指向原来分支的对应的commitId(HEAD commit id)。
+创建分支，它需要做的是：在.gitlet/branches中创建一个新文件，文件名是 分支名，文件内容是head指针当前指向分支的对应的 commitId(HEAD commit id)。
+
+## 项目难点：merge
+- 分支的主要作用在于：二并一，并且它只会改变当前 HEAD 对应分支指向的 commit，不会改变 merge 命令后面那个分支的指针指向。
+- 应该对 merge 有一个直观的理解，而不仅仅是下面复杂的8个逻辑，而有了直观认知后，就可以参照下面的 8 个逻辑实现了。
+- 非冲突合并的直观理解1：对于某个文件，如果一方相对于公共祖先结点进行了添加、删除、修改，而另一方相对于公共祖先结点不变，则合并后生成的提交需要跟踪单方所做的修改。
+- 非冲突合并的直观理解2：对于某个文件，如果一方相对于公共祖先结点进行了添加、删除、修改，而另一方相对于公共祖先结点进行了添加、删除、修改，
+                     并且两个分支所做的修改完全相同(比如都删除了文件，或者修改后文件内容相同)，则不会产生合并冲突，维持现状即可。
+- 冲突合并的直观理解：相对于公共祖先结点，如果一方对某个文件进行了添加、删除、修改，而另一方对该文件也做了添加、删除、修改，并且两个分支对该文件的改变相对于祖先结点而言不一致，就会带来合并冲突。
+- 如何处理 CWD(当前工作目录) ？ 需要意识到，merge 的本质也是产生一次新的提交，为此，它需要先改变 CWD，然后将改变添加到 暂存区，最后才进行提交。
+- 至少应该先通过集合运算，确定哪些文件在三个 commit 结点都有，哪些是其中二者拥有的，哪些仅其中一者拥有，这样会使得问题变得更清晰。
+
+commit1 -- commit2 --- commit3 --- commit4
+                        master     hot-fix
+git merge hotfix, 比如当前在 master 分支上，那么此时会将 master 指针移动到 commit4， 这被称作 fast-forward 
+反过来，如果你在 hot-fix 分支上运行 git merge master, 那么此时由于 hot-fix 就是新版本，所以无需移动任何指针。
+【提示：你或许应该先获取 三者都有的文件，在两者有但一个人没有的文件，仅有一方有的文件，然后再来讨论就会容易很多】
+下面考虑复杂情况：假设两个分支分叉，那么分叉点就是公共祖先结点
+- ① 对于一个文件，与公共祖先结点相比；如果当前分支没有修改，而目标分支修改了 --> 应该先将目标分支版本的文件加入CWD，然后添加暂存区 [文件存在于三个区域]
+- ② 对于一个文件，与公共祖先结点相比；如果当前分支修改了，而目标分支没有修改 --> (对于当前分支而言)保持原样 [文件存在于三个区域]
+- ③ 如果两个分支对于同一个文件的修改规则相同，比如都删除了或者内容相同；-->  (对于当前分支而言)保持原样 [文件存在于三个区域/文件仅存在于公共祖先结点]
+     补充：如果两个分支都删除了某个文件，但是当前 CWD 中有一个同名文件，不处理它 (不跟踪，也不缓存) 
+- ④ 没出现在公共祖先结点的文件，且仅出现在当前分支 --> (对于当前分支而言)保持原样 [文件仅存在于当前分支]
+- ⑤ 没出现在公共祖先结点的文件，且仅出现在目标分支 --> 应该取出到 CWD, 并添加暂存区 [文件仅出现在目标分支]
+- ⑥ 出现在公共祖先结点的文件，当前分支未修改，目标分支该文件缺失 --> 从 CWD 移除 并 取消跟踪该文件 [文件出现于公共祖先结点和当前分支]
+- ⑦ 出现在公共祖先结点的文件，目标分支未修改，当前分支该文件缺失 --> (对于当前分支而言)保持原样(remain absent.) [文件出现于公共祖先结点和目标分支]
+- ⑧ a.如果对于一个文件，都相对于公共祖先结点修改了，并且修改的内容不同， [文件出现于三个区域]
+     b.相对于祖先结点，一方修改了文件，一方删除了文件 [文件出现于祖先结点和目标分支/文件出现于祖先结点和当前分支]
+     c.公共祖先结点文件缺失，两个分支的内容不同 [文件出现于目标分支和当前分支]
+     在上述情况下，需要处理合并冲突，需要给CWD的冲突文件写入 冲突处理内容；然后将该文件暂存
+     Treat a deleted file in a branch as an empty file.  
+     ? In the case of a file with no newline at the end, you might well end up with something like this:
+
+- 在上述复杂情况完成后，merge 自动提交，log 信息 Merged [given branch name] into [current branch name]. (注意：log中需要打印)
+- 如果遇到合并冲突，前面的提交也会发生(注意：这与 git 不同)，打印 Encountered a merge conflict.
+- 合并的提交有两个 parent，第一个 parent 就是当前分支的 parent，另一个是目标分支的 parent
 
 ## bug 记录区
 - Main中的问题：switch 分支不加 break 会带来各种惊奇的错误
 - String 是可变对象，如果使用 s = s + "a"，这将重新分配堆空间。所以 List<String> forEach(s -> s = s + "a"); 不会改变原有数组的内容。
+- merge 中，getSplitCommit 出错，是因为 commitTraceBack 返回的 List<Commit> 顺序是 由 新 --> 旧。寻找公共祖先，需要把该 List 逆置。
+- merge 中，if (!branchCommitFiles.contains(fileName)) 中的 branchCommitFiles 写成了 splitPointFiles。应该检测目标分支是否删除了该文件
+- 下面代码的正确逻辑如下。最开始写反了，导致 bug
+```angular2html
+if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { 
+    System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
+    return;
+} else {
+    rm(fileName);
+}
+```
+- merge 最后生成的 commit 在 setSecondParentId 之后必须保存到 .gitlet/commits 中，否则会导致 log 输出错误
+
 
 **知识补充：不可变对象**
 
