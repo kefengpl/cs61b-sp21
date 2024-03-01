@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 
 import static gitlet.GitletConstants.*;
@@ -408,13 +409,18 @@ public class Repository {
         allRelevantFiles.addAll(currentCommitFiles);
         allRelevantFiles.addAll(branchCommitFiles);
 
+        boolean conflictFlag = false;
+
         for (String fileName : allRelevantFiles) {
             boolean splitCurrentConsistent = CommitUtils.isConsistent(fileName, splitPoint, currentCommit);
             boolean splitBranchConsistent = CommitUtils.isConsistent(fileName, splitPoint, branchCommit);
             boolean branchCurrentConsistent = CommitUtils.isConsistent(fileName, currentCommit, branchCommit);
+            // merge no conflicts
             if ((splitBranchConsistent && !splitCurrentConsistent) || branchCurrentConsistent) {
                 continue;
-            } else if (!splitBranchConsistent && splitCurrentConsistent) {
+            }
+
+            if (!splitBranchConsistent && splitCurrentConsistent) {
                 if (!branchCommitFiles.contains(fileName)) {
                     // in this case, other two commit must contain the file
                     // remove the file from CWD & not tracked this file in merged commit
@@ -435,14 +441,42 @@ public class Repository {
                         add(fileName);
                     }
                 }
+                continue;
+            }
+
+            // merge with conflicts, if logic can be simplified
+            if (!splitBranchConsistent && !splitCurrentConsistent && !branchCurrentConsistent) {
+                conflictFlag = true;
+                StringBuilder conflictedContents = new StringBuilder("<<<<<<< HEAD\n");
+                String currentCommitContent =  currentCommitFiles.contains(fileName) ?
+                                               FileUtils.getFileContent(fileName, currentCommit) : "";
+                String branchCommitContent = branchCommitFiles.contains(fileName) ?
+                                             FileUtils.getFileContent(fileName, branchCommit) : "";
+                conflictedContents.append(currentCommitContent);
+                conflictedContents.append("=======\n");
+                conflictedContents.append(branchCommitContent);
+                conflictedContents.append(">>>>>>>\n");
+                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                    System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
+                    return;
+                } else {
+                    FileUtils.writeCWDFile(fileName, String.valueOf(conflictedContents));
+                    add(fileName);
+                }
             }
         }
+
         // 1. make commit 2. set this new commit secondParentId
         commit("Merged " + branchName + " into " + HEAD + ".");
         Commit mergeCommit = CommitUtils.readCommit(getHeadCommitId());
         mergeCommit.setSecondParentId(BranchUtils.getCommitId(branchName));
         // bug: you have to save the merge commit. all changes must be saved
         CommitUtils.saveCommit(mergeCommit);
+
+        // if conflicted, you should out put some message
+        if (conflictFlag) {
+            System.out.println("Encountered a merge conflict.");
+        }
     }
 
 

@@ -112,9 +112,7 @@ git merge hotfix, 比如当前在 master 分支上，那么此时会将 master �
 - ⑧ a.如果对于一个文件，都相对于公共祖先结点修改了，并且修改的内容不同， [文件出现于三个区域]
      b.相对于祖先结点，一方修改了文件，一方删除了文件 [文件出现于祖先结点和目标分支/文件出现于祖先结点和当前分支]
      c.公共祖先结点文件缺失，两个分支的内容不同 [文件出现于目标分支和当前分支]
-     在上述情况下，需要处理合并冲突，需要给CWD的冲突文件写入 冲突处理内容；然后将该文件暂存
-     Treat a deleted file in a branch as an empty file.  
-     ? In the case of a file with no newline at the end, you might well end up with something like this:
+     在上述情况下，需要处理合并冲突，需要给CWD的冲突文件写入 冲突处理内容；然后将该文件暂存。如果某分支的文件删除，把它当作空文件。
 
 - 在上述复杂情况完成后，merge 自动提交，log 信息 Merged [given branch name] into [current branch name]. (注意：log中需要打印)
 - 如果遇到合并冲突，前面的提交也会发生(注意：这与 git 不同)，打印 Encountered a merge conflict.

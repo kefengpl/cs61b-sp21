@@ -27,6 +27,14 @@ public class FileUtils {
         return readContentsAsString(join(OBJECTS_DIR, fileSHA1));
     }
 
+    /**
+     * read contents of file of the version of commit from .gitlet/objects
+     */
+    public static String getFileContent(String fileName, Commit commit) {
+        assert fileName != null && commit != null;
+        return getFileContent(commit.getFileVersionMap().get(fileName));
+    }
+
     /***
      * @param fileName the name of the file which is to be save as an object in .gitlet/objects
      * @return sha1 of the file content
