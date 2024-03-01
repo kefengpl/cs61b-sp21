@@ -257,7 +257,7 @@ public class Repository {
     private static void restoreCommit(Commit commit) {
         Commit currentCommit = CommitUtils.readCommit(getHeadCommitId());
         // pre-check
-        for (String fileName : Objects.requireNonNull(plainFilenamesIn(CWD))) {
+        for (String fileName : commit.getFileVersionMap().keySet()) {
             if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
                 System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
                 return;
@@ -405,9 +405,11 @@ public class Repository {
             return; // in this case, head & branch points to the same commit, no need to merge
         }
         if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
-            checkout(branchName); // checkout branch
             // fast-forward master pointer
+            String currentHEAD = HEAD;
             BranchUtils.saveCommitId(HEAD, BranchUtils.getCommitId(branchName));
+            checkout(branchName); // checkout branch, note it will change head --> another branch
+            HEAD = currentHEAD; // restore current head !
             System.out.println("Current branch fast-forwarded.");
             return;
         }
