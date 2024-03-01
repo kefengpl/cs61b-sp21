@@ -168,3 +168,7 @@ Java中除了String外，Integer、Float、BigInteger等包装类也是不可变
 
 如果希望修改获得的keySet，需要 new HashMap(map.keySet())。重新分配一块堆空间。因为祖宗之法不可变，Map中取出的keySet()是一个引用，
 在不修改map结构的情况下，这个引用的keySet()是不可修改的。
+
+**Map的Val更新**
+
+java中map的val更新是啰嗦的，下面这个语句实现了类似C++中 _map[key]++ 的效果，map.put(key, map.getOrDefault(key, 0) + 1);

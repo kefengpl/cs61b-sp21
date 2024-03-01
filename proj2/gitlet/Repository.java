@@ -405,11 +405,11 @@ public class Repository {
             return; // in this case, head & branch points to the same commit, no need to merge
         }
         if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
-            // fast-forward master pointer
-            String currentHEAD = HEAD;
-            BranchUtils.saveCommitId(HEAD, BranchUtils.getCommitId(branchName));
+            String savedHEAD = HEAD;
             checkout(branchName); // checkout branch, note it will change head --> another branch
-            HEAD = currentHEAD; // restore current head !
+            HEAD = savedHEAD;
+            // fast-forward master pointer
+            BranchUtils.saveCommitId(HEAD, BranchUtils.getCommitId(branchName));
             System.out.println("Current branch fast-forwarded.");
             return;
         }
