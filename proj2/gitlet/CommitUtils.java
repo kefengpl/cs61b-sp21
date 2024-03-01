@@ -138,7 +138,7 @@ public class CommitUtils {
     }
 
     /**
-     * trace back to the initial commit
+     * trace back to the initial commit, include currentCommit
      */
     public static List<Commit> commitTraceBack(Commit currentCommit) {
         List<Commit> commitList = new LinkedList<>();
@@ -148,6 +148,30 @@ public class CommitUtils {
             commitPtr = readCommit(commitPtr.getParentId());
         }
         return commitList;
+    }
+
+    /**
+     * get all ancestors of this commit. include this commit itself
+     * @param visitedSet should be an empty set.
+     * @return list of commit id (string)
+     */
+    public static List<String> commitAncestors(Commit commit, Set<String> visitedSet) {
+        String parentId = commit.getParentId();
+        String secondParentId = commit.getSecondParentId();
+        visitedSet.add(getCommitId(commit));
+        List<String> result = new LinkedList<>();
+        result.add(getCommitId(commit));
+        if (parentId != null && !visited(visitedSet, parentId)) {
+            result.addAll(commitAncestors(readCommit(parentId), visitedSet));
+        }
+        if (secondParentId != null && !visited(visitedSet, secondParentId)) {
+            result.addAll(commitAncestors(readCommit(secondParentId), visitedSet));
+        }
+        return result;
+    }
+
+    private static boolean visited(Set<String> visitedSet, String commitId) {
+        return visitedSet.contains(commitId);
     }
 
     /**
@@ -177,6 +201,57 @@ public class CommitUtils {
         // in minLength range, the two list has same commit, then the end elem of shorter list will be return
         return branch1Traced.size() < branch2Traced.size() ?
                 branch1Traced.get(branch1Traced.size() - 1) : branch2Traced.get(branch1Traced.size() - 1);
+    }
+
+
+    /**
+     * get the split point of two branches
+     * @return if the two list has same length and has same commit list, then return null
+     */
+    public static Commit getSplitCommitWithGraph(String branchName1, String branchName2) {
+        String branch1CommitId = BranchUtils.getCommitId(branchName1);
+        String branch2CommitId = BranchUtils.getCommitId(branchName2);
+        Commit commit1 = readCommit(branch1CommitId);
+        Commit commit2 = readCommit(branch2CommitId);
+        List<String> branch1AncestorsId = commitAncestors(commit1, new HashSet<>());
+        List<String> branch2AncestorsId = commitAncestors(commit2, new HashSet<>());
+        List<String> commonAncestors = new LinkedList<>();
+        for (String commitId : branch1AncestorsId) {
+            if (branch2AncestorsId.contains(commitId)) {
+                commonAncestors.add(commitId);
+            }
+        }
+        Map<String, Integer> inDegreeOfAncestors = inDegreeOfNodes(commonAncestors);
+        for (String commitId : inDegreeOfAncestors.keySet()) {
+            if (inDegreeOfAncestors.get(commitId) == 0) {
+                return CommitUtils.readCommit(commitId);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Calculate the in degree for each node in common ancestors.
+     * can be calculated by where those commit points to (out degree)
+     * @return map: commit id --> in degree
+     */
+    private static Map<String, Integer> inDegreeOfNodes(List<String> commitIds) {
+        Map<String, Integer> statisticResult = new HashMap<>();
+        for (String commitId : commitIds) {
+            statisticResult.put(commitId, 0);
+        }
+        for (String commitId : commitIds) {
+            Commit commit = CommitUtils.readCommit(commitId);
+            String parentId = commit.getParentId();
+            String secondParentId = commit.getSecondParentId();
+            if (parentId != null) {
+                statisticResult.put(parentId, statisticResult.get(parentId) + 1);
+            }
+            if (secondParentId != null) {
+                statisticResult.put(secondParentId, statisticResult.get(secondParentId) + 1);
+            }
+        }
+        return statisticResult;
     }
 
     /**

@@ -44,4 +44,16 @@ public class SetUsageTest {
         set.addAll(map2.keySet());
         System.out.println(set);
     }
+
+    @Test
+    public void test4() {
+        MyGraph<Integer> graph = new MyGraph<>(5);
+        graph.setNodesVal(new Integer[]{0, 1, 2, 3, 4});
+        graph.addEdge(0, 3);
+        graph.addEdge(1, 2);
+        graph.addEdge(0, 2);
+        graph.addEdge(2, 4);
+        graph.addEdge(3, 4);
+        graph.traverseGraph();
+    }
 }

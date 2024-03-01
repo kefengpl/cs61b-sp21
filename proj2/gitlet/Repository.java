@@ -387,7 +387,8 @@ public class Repository {
         }
         // get current-branch commit, target-branch commit & split point commit
         Commit branchCommit = CommitUtils.readCommit(BranchUtils.getCommitId(branchName));
-        Commit splitPoint = CommitUtils.getSplitCommit(HEAD, branchName);
+        // Commit splitPoint = CommitUtils.getSplitCommit(HEAD, branchName);
+        Commit splitPoint = CommitUtils.getSplitCommitWithGraph(HEAD, branchName);
 
         // the cases in which the current branch and target branch in the same line
         if (splitPoint == null || CommitUtils.isSameCommit(branchCommit, splitPoint)) {
@@ -472,6 +473,9 @@ public class Repository {
         mergeCommit.setSecondParentId(BranchUtils.getCommitId(branchName));
         // bug: you have to save the merge commit. all changes must be saved
         CommitUtils.saveCommit(mergeCommit);
+
+        // 3. other things to do: you have to make the current branch --> merged commit
+        BranchUtils.saveCommitId(HEAD, CommitUtils.getCommitId(mergeCommit));
 
         // if conflicted, you should out put some message
         if (conflictFlag) {
