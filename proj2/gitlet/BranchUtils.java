@@ -1,6 +1,5 @@
 package gitlet;
 
-import java.io.File;
 import java.util.List;
 
 import static gitlet.GitletConstants.*;

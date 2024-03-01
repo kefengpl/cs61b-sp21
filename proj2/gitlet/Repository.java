@@ -255,6 +255,15 @@ public class Repository {
      * just like the commit just happen.
      */
     private static void restoreCommit(Commit commit) {
+        Commit currentCommit = CommitUtils.readCommit(getHeadCommitId());
+        // pre-check
+        for (String fileName : Objects.requireNonNull(plainFilenamesIn(CWD))) {
+            if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
+                System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
+                return;
+            }
+        }
+
         // 1. restore files to CWD
         FileUtils.restoreCommitFiles(commit);
 
@@ -392,11 +401,14 @@ public class Repository {
 
         // the cases in which the current branch and target branch in the same line
         if (splitPoint == null || CommitUtils.isSameCommit(branchCommit, splitPoint)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
             return; // in this case, head & branch points to the same commit, no need to merge
         }
         if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
+            checkout(branchName); // checkout branch
             // fast-forward master pointer
             BranchUtils.saveCommitId(HEAD, BranchUtils.getCommitId(branchName));
+            System.out.println("Current branch fast-forwarded.");
             return;
         }
 

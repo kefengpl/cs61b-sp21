@@ -10,10 +10,12 @@ import java.util.TimeZone;
 /**
  * Interpret transient:
  * when you write an object to file, it will write itself and all members it references to
- * Don’t use Java pointers to refer to commits and blobs in your runtime objects, but instead use SHA-1 hash strings
- * Maintain a runtime map(never write to file) between these SHA-1 strings and the runtime objects they refer to.
- * (I think this runtime map should be stored in Repository, not in this class)
- * @description this class is just a JavaBean which stores critical information. Not for doing anything.
+ * Don’t use Java pointers to refer to commits and blobs in your runtime objects, but instead
+ * use SHA-1 hash strings. Maintain a runtime map(never write to file) between these SHA-1
+ * strings and the runtime objects they refer to. (I think this runtime map should be stored
+ * in Repository, not in this class)
+ * @description this class is just a JavaBean which stores critical information.
+ * Not for doing anything.
  * this class will be serialized to a file in [commits] folder in [.gitlet]
  */
 public class Commit implements Serializable {
