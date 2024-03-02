@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.util.Arrays;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static gitlet.GitletConstants.*;
@@ -75,6 +76,21 @@ public class Main {
             case "merge":
                 commandRunner(restArgs.length == 1, Repository::merge, restArgs[0]);
                 break;
+            case "add-remote":
+                commandRunner(restArgs.length == 2, RemoteUtils::addRemote, restArgs[0], restArgs[1]);
+                break;
+            case "rm-remote":
+                commandRunner(restArgs.length == 1, RemoteUtils::removeRemote, restArgs[0]);
+                break;
+            case "push":
+                commandRunner(restArgs.length == 2, RemoteUtils::push, restArgs[0], restArgs[1]);
+                break;
+            case "fetch":
+                commandRunner(restArgs.length == 2, RemoteUtils::fetch, restArgs[0], restArgs[1]);
+                break;
+            case "pull":
+                commandRunner(restArgs.length == 2, RemoteUtils::pull, restArgs[0], restArgs[1]);
+                break;
             case "test":
                 break;
             default:
@@ -97,6 +113,23 @@ public class Main {
             return;
         }
         function.accept(args);
+    }
+
+    /***
+     * check one command whether after init() and check arg numbers at the same time
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
+     */
+    private static <T1, T2> void commandRunner(boolean argsNumberCheck, BiConsumer<T1, T2> function, T1 args1, T2 args2) {
+        if (!Repository.isInitialized()) {
+            System.out.println(UNINITIALIZED_WARNING);
+            return;
+        }
+        if (!argsNumberCheck) {
+            System.out.println(INCORRECT_OPERANDS_WARNING);
+            return;
+        }
+        function.accept(args1, args2);
     }
 
     /***

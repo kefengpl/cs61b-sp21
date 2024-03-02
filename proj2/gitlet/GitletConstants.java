@@ -17,6 +17,10 @@ public class GitletConstants {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     /** the index file */
     public static final File INDEX_FILE = join(GITLET_DIR, "index");
+    /** store a map, remote name --> location(path) */
+    public static final File REMOTE_FILE = join(GITLET_DIR, "remote");
+    /** every remote repository must have it's own HEAD & master branch */
+    public static final File REMOTE_FILE_DIR = join(GITLET_DIR, "remotes");
     /** the HEAD file */
     public static final File HEAD_FILE = join(GITLET_DIR, "HEAD");
     /** the commits directory, store every commit */

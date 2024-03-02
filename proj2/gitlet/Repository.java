@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.*;
 
 import static gitlet.GitletConstants.*;

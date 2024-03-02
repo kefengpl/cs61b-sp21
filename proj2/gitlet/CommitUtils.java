@@ -151,6 +151,20 @@ public class CommitUtils {
     }
 
     /**
+     * trace back to the initial commit, include currentCommit
+     * @note the difference is this function will return commit ids.
+     */
+    public static List<String> commitIdTraceBack(Commit currentCommit) {
+        List<String> commitList = new LinkedList<>();
+        Commit commitPtr = currentCommit;
+        while (commitPtr != null) {
+            commitList.add(getCommitId(commitPtr));
+            commitPtr = readCommit(commitPtr.getParentId());
+        }
+        return commitList;
+    }
+
+    /**
      * get all ancestors of this commit. include this commit itself
      * @param visitedSet should be an empty set.
      * @return list of commit id (string)
