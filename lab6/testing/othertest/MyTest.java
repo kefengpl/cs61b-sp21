@@ -12,7 +12,7 @@ import java.nio.file.Paths;
  * @Author 3590
  * @Date 2024/1/30 20:16
  * @Description Java 文件基础
- * File file  对象表示可能存在的filename
+ * File file  对象表示可能存在的 filename
  * 流的API：四个抽象基类： (字节流，非文本文件)InputStream OutputStream (字符流，文本文件)Reader Writer
  *
  * 常用节点流：节点流（Node Stream）：节点流直接与特定的数据源或数据目标连接，用于从中读取或写入数据。
