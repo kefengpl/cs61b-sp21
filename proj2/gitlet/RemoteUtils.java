@@ -31,36 +31,7 @@ public class RemoteUtils {
     }
 
     public static boolean remoteRefsInitialized() {
-        return REMOTE_FILE.exists() && REMOTE_FILE_DIR.exists();
-    }
-
-    /**
-     * the folder name is the remote name
-     * in remote folder, there is
-     * 1. HEAD file, which store remote branch name (for example: master means origin/master)
-     * 2. branch file, (for example: master), which points to local commit id.
-     * all files will be initialized with empty.
-     */
-    public static void createRemoteRefsFolder(String remoteName) {
-        File folder = join(REMOTE_FILE_DIR, remoteName);
-        if (!folder.exists()) {
-            folder.mkdir();
-        }
-        writeRemoteRefsHead(remoteName, "master");
-    }
-
-    public static void deleteRemoteRefsFolder(String remoteName) {
-        File remoteFolder = getRemoteRefsFolder(remoteName);
-        List<String> remoteFolderFileNames = plainFilenamesIn(remoteFolder);
-        assert remoteFolderFileNames != null;
-        for (String fileName : remoteFolderFileNames) {
-            restrictedDelete(join(remoteFolder, fileName));
-        }
-        remoteFolder.delete();
-    }
-
-    public static File getRemoteRefsFolder(String remoteName) {
-        return Utils.join(REMOTE_FILE_DIR, remoteName);
+        return REMOTE_FILE.exists();
     }
 
     /**
@@ -74,36 +45,10 @@ public class RemoteUtils {
         return Utils.join(getRemotePath(remoteName));
     }
 
-    public static void writeRemoteRefsHead(String remoteName, String content) {
-        writeContents(join(getRemoteRefsFolder(remoteName), "HEAD"), content);
-    }
-
-    public static String readRemoteRefsHead(String remoteName) {
-        return readContentsAsString(join(getRemoteRefsFolder(remoteName)));
-    }
-
     public static boolean isRemoteAdded(String remoteName) {
         return remoteLocationMap.containsKey(remoteName);
     }
 
-    public static boolean remoteRefsBranchExists(String remoteName, String remoteBranchName) {
-        List<String> remoteBranchNames = plainFilenamesIn(getRemoteRefsFolder(remoteName));
-        assert remoteBranchNames != null;
-        return remoteBranchNames.contains(remoteBranchName);
-    }
-
-    public static String readRefsRemoteBranch(String remoteName, String remoteBranchName) {
-        if (!remoteRefsBranchExists(remoteName, remoteBranchName)) {
-            throw new RuntimeException("the branch name doesn't exist in that remote repository");
-        }
-        File branchFile = join(getRemoteRefsFolder(remoteName), remoteBranchName);
-        return readContentsAsString(branchFile);
-    }
-
-    public static void writeRefsRemoteBranch(String remoteName, String remoteBranchName, String contents) {
-        File branchFile = join(getRemoteRefsFolder(remoteName), remoteBranchName);
-        writeContents(branchFile, contents);
-    }
 
     public static File remoteCommitsFolder(String remoteName) {
         return join(getRemoteGitletFolder(remoteName), "commits");
@@ -144,13 +89,6 @@ public class RemoteUtils {
         File remoteBranchesFolder = remoteBranchesFolder(remoteName);
         File remoteBrancheFile = join(remoteBranchesFolder, branchName);
         writeContents(remoteBrancheFile, branchContent);
-    }
-
-    public static void copyBranchFileFromRemote(String branchName, String remoteName) {
-        File remoteBranchesFolder = remoteBranchesFolder(remoteName);
-        File remoteBrancheFile = join(remoteBranchesFolder, branchName);
-        String branchContent = readContentsAsString(remoteBrancheFile);
-        writeContents(join(BRANCHES_DIR, branchName), branchContent);
     }
 
     public static void copyObjectsFileToRemote(String fileSHA1, String remoteName) {
@@ -248,9 +186,6 @@ public class RemoteUtils {
                 throw new RuntimeException("failed to create remote file");
             }
         }
-        if (!REMOTE_FILE_DIR.exists()) {
-            REMOTE_FILE_DIR.mkdir();
-        }
         if (isRemoteAdded(remoteName)) {
             System.out.println("A remote with that name already exists.");
             return;
@@ -264,9 +199,6 @@ public class RemoteUtils {
         convertedPath.delete(convertedPath.length() - 1, convertedPath.length());
         remoteLocationMap.put(remoteName, String.valueOf(convertedPath));
         saveRemoteLocationMap();
-
-        // create remote repo's folder
-        createRemoteRefsFolder(remoteName);
     }
 
     public static void removeRemote(String remoteName) {
@@ -279,7 +211,6 @@ public class RemoteUtils {
         }
         remoteLocationMap.remove(remoteName);
         saveRemoteLocationMap();
-        deleteRemoteRefsFolder(remoteName);
     }
 
     public static void push(String remoteName, String remoteBranchName) {
@@ -321,12 +252,12 @@ public class RemoteUtils {
     }
 
     public static void fetch(String remoteName, String remoteBranchName) {
-        if (!remoteBranchExists(remoteBranchName, remoteName)) {
-            System.out.println("That remote does not have that branch.");
-            return;
-        }
         if (!getRemoteGitletFolder(remoteName).exists()) {
             System.out.println("Remote directory not found.");
+            return;
+        }
+        if (!remoteBranchExists(remoteBranchName, remoteName)) {
+            System.out.println("That remote does not have that branch.");
             return;
         }
         // 1. copies all commits and blobs from the given branch in the remote repository
