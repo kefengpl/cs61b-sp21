@@ -86,6 +86,7 @@ public class IndexUtils {
      * get staged files for git status.
      * it compares indexMap and commit.fileVersionMap
      * @param commit current commit to compare to
+     * @return list of file names
      */
     public static List<String> getStagedFiles(Commit commit) {
         HashMap<String, String> fileVersionMap = commit.getFileVersionMap();
